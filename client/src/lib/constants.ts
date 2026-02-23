@@ -85,3 +85,18 @@ export const US_STATES = [
   { abbreviation: 'WY', name: 'Wyoming' },
 ] as const
 export type StateAbbreviation = (typeof US_STATES)[number]['abbreviation']
+
+export const AVATAR_OPTIONS = [
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-2.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-3.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-4.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-5.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-6.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-7.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-8.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-9.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-10.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-11.png',
+  'https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-12.png',
+] as const

@@ -70,6 +70,7 @@ export const createPatientSchema = basicInfoSchema
     emergency_contacts: z.array(emergencyContactSchema).optional(),
     insurance: insuranceSchema.optional(),
     medical: medicalSchema.optional(),
+    avatar_url: z.string().url().nullable().optional(),
   })
 export type CreatePatientValues = z.infer<typeof createPatientSchema>
 
@@ -88,6 +89,7 @@ export const editDemographicsSchema = z.object({
   city: z.string().min(1, 'City is required').optional(),
   state: z.string().min(2).max(2).optional(),
   zip_code: z.string().regex(/^\d{5}$/, 'ZIP code must be 5 digits').optional(),
+  avatar_url: z.string().url().nullable().optional(),
 })
 export type EditDemographicsValues = z.infer<typeof editDemographicsSchema>
 
@@ -155,3 +157,37 @@ export const pharmacySchema = z.object({
   lng: z.coerce.number().optional(),
 })
 export type PharmacyValues = z.infer<typeof pharmacySchema>
+
+// ======================== Auth schemas ========================
+
+export const loginSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
+export type LoginValues = z.infer<typeof loginSchema>
+
+export const registerSchema = z.object({
+  display_name: z.string().min(1, 'Display name is required'),
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirm_password: z.string().min(1, 'Please confirm your password'),
+}).refine(data => data.password === data.confirm_password, {
+  message: 'Passwords do not match',
+  path: ['confirm_password'],
+})
+export type RegisterValues = z.infer<typeof registerSchema>
+
+export const profileSchema = z.object({
+  display_name: z.string().min(1, 'Display name is required'),
+  role: z.enum(['Staff', 'Administrator', 'Provider', 'Nurse'] as const, { message: 'Role is required' }),
+  phone: optionalString,
+})
+export type ProfileValues = z.infer<typeof profileSchema>
+
+export const settingsSchema = z.object({
+  theme: z.enum(['light', 'dark', 'system'] as const),
+  notifications_enabled: z.boolean(),
+  page_size: z.coerce.number().refine(v => [10, 20, 50].includes(v)),
+  date_format: z.enum(['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'] as const),
+})
+export type SettingsValues = z.infer<typeof settingsSchema>

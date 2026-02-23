@@ -1,6 +1,6 @@
 # Project Status
 
-**Last updated:** 2026-02-22
+**Last updated:** 2026-02-23
 
 ## Overall Progress
 
@@ -10,12 +10,14 @@
 | Frontend Pages | Done | 100% |
 | Frontend Components (patients, dashboard) | Done | 100% |
 | Frontend Hooks & API Client | Done | 100% |
+| Authentication & User Management | Done | 100% |
+| Animations & Motion | Done | 100% |
 | Backend API | Done | 100% |
 | Database Schema | Done | 100% |
 | Seed Data | Done | 100% |
 | External API Integration | Done (pharmacy proxy) | 100% |
 
-**Estimated overall: ~100%** — All pages, components, and backend endpoints are complete. Notifications and activity feed are wired to live data. All cosmetic components are data-driven.
+**Estimated overall: ~100%** — All pages, components, backend endpoints, authentication, and animations are complete. Notifications and activity feed are wired to live data. All cosmetic components are data-driven.
 
 ---
 
@@ -53,20 +55,22 @@
 - [x] Flash prevention script in `index.html`
 - [x] Persists to `localStorage` key `theme`
 
-### UI Components (26 installed)
+### UI Components (28 installed)
 - [x] avatar, badge, button, calendar, card, chart
 - [x] collapsible, command, dialog, dropdown-menu, form
 - [x] input, label, pagination, popover, progress
 - [x] select, separator, sheet, sidebar, skeleton
-- [x] sonner, table, tabs, textarea, tooltip
+- [x] sonner, switch, table, tabs, textarea, tooltip
+- [x] Custom: dock (Framer Motion magnification)
 
 ### Routing (Complete)
 - [x] React Router v7 with `BrowserRouter`
-- [x] 4 routes defined: `/`, `/patients/new`, `/patients/:id`, `/patients/:id/prescribe`
-- [x] All routes nested under `AppShell` layout
+- [x] 9 routes defined: `/login`, `/register`, `/`, `/patients`, `/patients/new`, `/patients/:id`, `/patients/:id/prescribe`, `/profile`, `/settings`
+- [x] Public routes: `/login`, `/register`
+- [x] Protected routes nested under `ProtectedRoute` + `AppShell` layout
 
 ### Environment Variables (Configured)
-- [x] `client/.env.local` — `VITE_API_BASE_URL`, `VITE_MAPBOX_TOKEN`
+- [x] `client/.env.local` — `VITE_API_BASE_URL`, `VITE_MAPBOX_TOKEN`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - [x] `server/.env` — `DATABASE_URL`, `GOOGLE_PLACES_API_KEY`, `MAPBOX_ACCESS_TOKEN`
 
 ### Frontend API Client & Hooks (Complete — Phase 4)
@@ -101,9 +105,9 @@
 - [x] `server/app/routes/pharmacies.py` — Google Places nearby search proxy (async httpx)
 - [x] `server/app/routes/stats.py` — Dashboard overview + trends + recent appointments + care gaps + new patients trend + top medications + recent activity (7 endpoints)
 
-### Database Schema (Complete — 11 tables + 10 seeded medications)
+### Database Schema (Complete — 11 clinical tables + 2 user tables + 10 seeded medications)
 
-- [x] `patients` — core patient record with status tracking
+- [x] `patients` — core patient record with status tracking + `avatar_url`
 - [x] `emergency_contacts` — 1:many with patients
 - [x] `insurance_info` — 1:1 with patients
 - [x] `medical_info` — 1:1 with patients
@@ -114,6 +118,8 @@
 - [x] `prescriptions` — 1:many with patients
 - [x] `medications` — lookup table (10 preloaded entries)
 - [x] `status_history` — 1:many chronological status change log
+- [x] `user_profiles` — user display info (display_name, role, phone, avatar_url), keyed by `auth_user_id`
+- [x] `user_settings` — user preferences (theme, notifications_enabled, page_size, date_format), keyed by `auth_user_id`
 
 ### Seed Data (Complete — 50 patients seeded)
 
@@ -130,6 +136,10 @@
 - [x] `PatientCreate.tsx` — 6-step multi-step form with progress bar, skip logic, slide animations, review step
 - [x] `PatientProfile.tsx` — 4 tabs (Overview, Appointments, Clinical, Prescriptions & Status), 9 edit/create dialogs
 - [x] `PrescriptionFlow.tsx` — 3-step flow (medication autocomplete, pharmacy map with Mapbox + Google Places, confirmation)
+- [x] `Login.tsx` — email/password sign-in with Supabase Auth
+- [x] `Register.tsx` — display name + email/password sign-up with password confirmation
+- [x] `Profile.tsx` — edit display name, role, phone, avatar (12 preset options with selection grid)
+- [x] `Settings.tsx` — theme picker (light/dark/system cards), notifications toggle (Switch), page size, date format
 
 ### Frontend Feature Components (Complete)
 
@@ -177,11 +187,34 @@
 - [x] `AppShell` — conditional red dot on bell icon (only shows when upcoming appointments or care gaps exist)
 - [x] `formatRelativeTime` helper added to `lib/format.ts`
 
----
+### Phase 11: Authentication & User Management (Complete)
+- [x] Supabase Auth integration (`@supabase/supabase-js` client in `lib/supabase.ts`)
+- [x] `AuthProvider` context — manages auth state, user profile, user settings, sign-out
+- [x] `ProtectedRoute` component — redirects unauthenticated users to `/login`
+- [x] Login page — email/password with Zod validation (`loginSchema`)
+- [x] Register page — display name + email/password + confirmation (`registerSchema`)
+- [x] Profile page — edit display name, role (Staff/Administrator/Provider/Nurse), phone, avatar grid (12 presets)
+- [x] Settings page — theme picker, notifications toggle, page size (10/20/50), date format
+- [x] Zod schemas: `loginSchema`, `registerSchema`, `profileSchema`, `settingsSchema`
+- [x] `user_profiles` and `user_settings` Supabase tables (created via DB triggers on signup)
+- [x] ProfileDropdown & SidebarUserDropdown wired to auth context (dynamic name, email, avatar, role)
+- [x] Logout functionality in both dropdown menus (clears auth state, navigates to `/login`)
 
-## Remaining (Out of Scope)
+### Phase 12: Avatars & Visual Polish (Complete)
+- [x] `avatar_url` column added to `patients` table (backend model + schemas + frontend types)
+- [x] 12 preset avatar options from shadcnstudio.com CDN (`AVATAR_OPTIONS` in constants)
+- [x] `.avatar-pfp` CSS class — sepia/saturate/hue-rotate skin-tone tint with light/dark variants
+- [x] Avatar picker in EditDemographicsDialog (grid with selection ring + checkmark)
+- [x] Patient avatars displayed in PatientHeader, sidebar Recent Patients, patient table
+- [x] `getInitials()` utility in `lib/utils.ts` for AvatarFallback text
 
-- Authentication — out of scope per spec
+### Phase 13: Animations & Microinteractions (Complete)
+- [x] Dock magnification (`client/src/components/ui/dock.tsx`) — Framer Motion springs for macOS-style header icon hover effect
+- [x] Theme toggle circular reveal — View Transitions API with `clipPath` circle expansion (700ms ease-out)
+- [x] ThemeToggle changed from 3-option dropdown to single-click light ↔ dark toggle
+- [x] Dialog 3D spring pop — CSS `perspective(800px) rotateX(40deg)` entrance animation (400ms)
+- [x] Dialog/Sheet overlay blur — `backdrop-blur-sm` + reduced opacity (`bg-black/40`)
+- [x] `framer-motion` added as dependency
 
 ---
 
@@ -197,3 +230,6 @@
 ### ~~Phase 8: Frontend — Prescription Flow~~ (DONE)
 ### ~~Phase 9: Polish~~ (DONE)
 ### ~~Phase 10: Live Notifications & Activity Feed~~ (DONE)
+### ~~Phase 11: Authentication & User Management~~ (DONE)
+### ~~Phase 12: Avatars & Visual Polish~~ (DONE)
+### ~~Phase 13: Animations & Microinteractions~~ (DONE)

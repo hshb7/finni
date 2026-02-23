@@ -12,7 +12,7 @@ import {
 
 import { usePatients } from '@/hooks/use-patients'
 import { useDebounce } from '@/hooks/use-debounce'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   CommandDialog,
   CommandEmpty,
@@ -99,7 +99,8 @@ const SearchDialog = ({ defaultOpen = false, trigger, className }: Props) => {
                   onSelect={() => selectPatient(p.id)}
                   className='gap-3 !py-1.5 text-base'
                 >
-                  <Avatar className='size-9.5'>
+                  <Avatar className='size-9.5 avatar-pfp'>
+                    <AvatarImage src={p.avatar_url ?? undefined} alt={`${p.first_name} ${p.last_name}`} />
                     <AvatarFallback>{p.first_name[0]}{p.last_name[0]}</AvatarFallback>
                   </Avatar>
                   <div className='flex w-full flex-col items-start'>

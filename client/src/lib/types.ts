@@ -19,6 +19,7 @@ export interface Patient {
   status: PatientStatus
   referral_source: string | null
   notes: string | null
+  avatar_url: string | null
   created_at: string
   updated_at: string
 }
@@ -155,6 +156,7 @@ export interface PatientListItem {
   city: string
   state: string
   phone: string | null
+  avatar_url: string | null
   created_at: string
 }
 
@@ -324,6 +326,7 @@ export interface CreatePatientRequest {
   emergency_contacts?: EmergencyContactInput[]
   insurance?: InsuranceInput
   medical?: MedicalInput
+  avatar_url?: string
 }
 
 export interface EditDemographicsRequest {
@@ -339,6 +342,7 @@ export interface EditDemographicsRequest {
   city?: string
   state?: string
   zip_code?: string
+  avatar_url?: string
 }
 
 export interface EditStatusRequest {

@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { usePatients } from '@/hooks/use-patients'
-import { useRecentAppointments, useCareGaps } from '@/hooks/use-stats'
+import { useAuth } from '@/contexts/AuthContext'
+import { getInitials } from '@/lib/utils'
 
 import {
   ActivityIcon,
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +31,7 @@ import {
 } from '@/components/ui/sidebar'
 
 import LogoSvg from '@/assets/svg/logo'
+import { Dock } from '@/components/ui/dock'
 import MenuTrigger from '@/components/layout/MenuTrigger'
 import SearchDialog from '@/components/layout/SearchDialog'
 import ThemeToggle from '@/components/layout/ThemeToggle'
@@ -50,17 +52,18 @@ const navItems: NavItem[] = [
 ]
 
 const AppShell = () => {
+  const { profile } = useAuth()
+  const firstName = profile?.display_name?.split(' ')[0] || ''
+  const userInitials = getInitials(profile?.display_name || '')
   const { data: recentData } = usePatients({ page: 1, page_size: 4, sort_by: 'created_at', sort_order: 'desc' })
-  const { data: appointmentsData } = useRecentAppointments()
-  const { data: careGapsData } = useCareGaps()
-  const hasNotifications = (appointmentsData?.upcoming?.length ?? 0) > 0 || (careGapsData?.total_count ?? 0) > 0
   const recentPatients = (recentData?.items ?? []).map(p => ({
     name: `${p.first_name} ${p.last_name}`,
     initials: `${p.first_name[0]}${p.last_name[0]}`,
+    avatarUrl: p.avatar_url,
     to: `/patients/${p.id}`,
   }))
   return (
-    <div className='bg-muted before:bg-primary relative flex min-h-dvh w-full before:fixed before:inset-x-0 before:top-0 before:h-105'>
+    <div className='bg-muted relative flex min-h-dvh w-full'>
       <SidebarProvider
         style={
           {
@@ -113,7 +116,8 @@ const AppShell = () => {
                     <SidebarMenuItem key={patient.name}>
                       <SidebarMenuButton asChild>
                         <NavLink to={patient.to}>
-                          <Avatar className='size-6 transition-[width,height] duration-200 [[data-state=collapsed]_&]:size-4'>
+                          <Avatar className='size-6 avatar-pfp transition-[width,height] duration-200 [[data-state=collapsed]_&]:size-4'>
+                            <AvatarImage src={patient.avatarUrl ?? undefined} alt={patient.name} />
                             <AvatarFallback className='text-xs'>
                               {patient.initials}
                             </AvatarFallback>
@@ -132,30 +136,30 @@ const AppShell = () => {
           </SidebarFooter>
         </Sidebar>
         <div className='z-1 flex flex-1 flex-col py-6'>
-          <header className='text-primary-foreground'>
+          <header className='text-foreground'>
             <div className='mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 sm:px-6'>
               <div className='flex items-center gap-4'>
                 <MenuTrigger
                   variant='outline'
-                  className='!bg-primary-foreground !border-primary-foreground !text-primary shadow-none'
+                  className='shadow-none'
                 />
                 <div className='hidden sm:flex sm:flex-col sm:items-start'>
-                  <p className='text-lg font-semibold'>Welcome back</p>
-                  <p className='text-primary-foreground/50 md:max-lg:hidden'>Patient Management Dashboard</p>
+                  <p className='text-lg font-semibold'>Welcome back{firstName ? `, ${firstName}` : ''}</p>
+                  <p className='text-muted-foreground md:max-lg:hidden'>Patient Management Dashboard</p>
                 </div>
               </div>
               <SearchDialog
                 className='hidden xl:block'
                 trigger={
                   <Button variant='ghost' className='!bg-transparent p-0 font-normal'>
-                    <div className='!bg-primary-foreground/20 text-primary-foreground hover:!bg-primary-foreground/25 flex min-w-55 items-center gap-1.5 rounded-md px-3 py-2 text-sm'>
+                    <div className='bg-secondary text-muted-foreground hover:bg-secondary/80 flex min-w-55 items-center gap-1.5 rounded-md px-3 py-2 text-sm'>
                       <SearchIcon />
                       <span>Type to search...</span>
                     </div>
                   </Button>
                 }
               />
-              <div className='flex items-center gap-1.5'>
+              <Dock className='flex items-center gap-1.5'>
                 <SearchDialog
                   className='block xl:hidden'
                   trigger={
@@ -182,24 +186,22 @@ const AppShell = () => {
                 />
                 <NotificationDropdown
                   trigger={
-                    <Button variant='ghost' size='icon' className='relative'>
+                    <Button variant='ghost' size='icon'>
                       <BellIcon />
-                      {hasNotifications && (
-                        <span className='bg-destructive absolute top-2 right-2.5 size-2 rounded-full' />
-                      )}
                     </Button>
                   }
                 />
                 <ProfileDropdown
                   trigger={
                     <Button variant='ghost' size='icon' className='size-9.5'>
-                      <Avatar className='size-9.5 rounded-md'>
-                        <AvatarFallback>AD</AvatarFallback>
+                      <Avatar className='size-9.5 avatar-pfp'>
+                        <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.display_name ?? ''} />
+                        <AvatarFallback>{userInitials}</AvatarFallback>
                       </Avatar>
                     </Button>
                   }
                 />
-              </div>
+              </Dock>
             </div>
           </header>
           <main className='mx-auto size-full max-w-7xl flex-1 px-4 py-6 sm:px-6'>

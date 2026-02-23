@@ -32,6 +32,7 @@ class Patient(SQLModel, table=True):
     status: str = Field(default="Inquiry", max_length=20)
     referral_source: Optional[str] = Field(default=None, max_length=255)
     notes: Optional[str] = Field(default=None)
+    avatar_url: Optional[str] = Field(default=None, max_length=500)
     created_at: datetime.datetime = Field(
         sa_column=Column(
             DateTime(timezone=True),
