@@ -1,3 +1,4 @@
+import { supabase } from './supabase'
 import type {
   PaginatedPatients,
   PatientDetail,
@@ -48,10 +49,17 @@ export class ApiError extends Error {
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const authHeaders: Record<string, string> = {}
+  if (session?.access_token) {
+    authHeaders['Authorization'] = `Bearer ${session.access_token}`
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options?.headers,
     },
   })

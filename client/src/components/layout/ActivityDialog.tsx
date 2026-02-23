@@ -24,17 +24,12 @@ import {
 
 import { useRecentActivity } from '@/hooks/use-stats'
 import { formatRelativeTime } from '@/lib/format'
+import { getInitials } from '@/lib/utils'
 import type { ActivityItem } from '@/lib/types'
 
 type Props = {
   trigger: ReactNode
   defaultOpen?: boolean
-}
-
-function getInitials(name: string): string {
-  const parts = name.split(/[\s,]+/).filter(Boolean)
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  return (parts[0]?.[0] ?? '?').toUpperCase()
 }
 
 const eventIcons: Record<ActivityItem['event_type'], typeof CalendarIcon> = {

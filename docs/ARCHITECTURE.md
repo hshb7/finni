@@ -300,17 +300,22 @@ Browser                     Backend                  Database
                                        └───────────────┘
 ```
 
-**13 tables total.** All IDs are UUIDs. All timestamps are auto-generated. Foreign keys cascade from `patients`.
+**13 clinical tables + 2 user tables.** All IDs are UUIDs. All timestamps are auto-generated. Foreign keys cascade from `patients`. Patients and users both have an `avatar_url` column for profile images (12 preset avatar options from shadcnstudio.com CDN).
 
 ## Frontend Architecture
 
 ### Routing
 
 ```
+/login                      → Login (public, email/password)
+/register                   → Register (public, name/email/password)
 /                           → Dashboard (stats + patient table)
+/patients                   → Patients list (redirected from Dashboard table)
 /patients/new               → PatientCreate (6-step form)
 /patients/:id               → PatientProfile (10 sections)
 /patients/:id/prescribe     → PrescriptionFlow (3-step form)
+/profile                    → User profile editor (name, role, phone, avatar)
+/settings                   → App preferences (theme, notifications, page size, date format)
 ```
 
 All routes are nested under `AppShell` which provides the sidebar + header layout.
@@ -319,18 +324,19 @@ All routes are nested under `AppShell` which provides the sidebar + header layou
 
 | State Type | Tool | Scope |
 |-----------|------|-------|
+| Auth state (user, profile, settings) | Supabase Auth + React Context | Global via `AuthProvider` |
 | Server data (patients, appointments, etc.) | TanStack Query | Global cache, auto-refetch |
 | Form state (creation/edit) | React Hook Form | Per-form instance |
 | Form validation | Zod schemas | Mirrors backend rules |
-| Theme preference | localStorage | Persistent, class-based |
+| Theme preference | localStorage + user_settings table | Persistent, synced on login |
 | UI state (modals, sidebar collapse) | React useState | Component-local |
 
 ### Component Organization
 
 ```
 components/
-├── ui/           shadcn/ui primitives (button, card, dialog, etc.)
-├── layout/       Application shell (sidebar, header, dropdowns)
+├── ui/           shadcn/ui primitives (button, card, dialog, dock, switch, etc.)
+├── layout/       Application shell (sidebar, header, dropdowns, ProtectedRoute)
 ├── dashboard/    Stats cards + charts (Recharts)
 └── patients/
     ├── PatientTable, StatusBadge
@@ -338,6 +344,14 @@ components/
     ├── profile/   10 section display components + StatusTimeline
     ├── forms/     8 modal edit forms
     └── prescribe/ 5 prescription flow components (includes map)
+
+contexts/
+└── AuthContext.tsx  Auth state provider (Supabase Auth + user_profiles + user_settings)
+
+lib/
+├── supabase.ts     Supabase client initialization
+├── theme.ts        Theme utility (getInitialTheme, applyTheme)
+└── ...             API client, schemas, constants, types, utils
 ```
 
 ### API Client Pattern
@@ -405,9 +419,77 @@ Client                    Backend                   Google Places
 
 Mapbox geocoding is called client-side (token is publishable, not secret).
 
+## Authentication & User Management
+
+### Auth Flow
+
+```
+Browser                     Supabase Auth                Supabase DB
+  │                            │                           │
+  │  POST /auth/signup         │                           │
+  │  { email, password,        │                           │
+  │    display_name }          │                           │
+  │───────────────────────────►│                           │
+  │                            │  Create auth.users row    │
+  │                            │  Trigger: create          │
+  │                            │  user_profiles +          │
+  │                            │  user_settings rows       │
+  │                            │──────────────────────────►│
+  │◄───────────────────────────│  { session, user }        │
+  │                            │                           │
+  │  AuthContext listens to    │                           │
+  │  onAuthStateChange         │                           │
+  │  → fetch user_profiles     │                           │
+  │  → fetch user_settings     │                           │
+  │  → apply stored theme      │                           │
+```
+
+### User Data Model
+
+```
+  ┌──────────────────┐
+  │  auth.users       │  (Supabase managed)
+  │──────────────────│
+  │  id (UUID)        │
+  │  email            │
+  │  encrypted_password│
+  └────────┬─────────┘
+           │ auth_user_id
+     ┌─────┴──────┐
+     │            │
+     ▼            ▼
+┌──────────────┐ ┌──────────────┐
+│user_profiles │ │user_settings │
+│──────────────│ │──────────────│
+│ display_name │ │ theme        │
+│ role         │ │ notifications│
+│ phone        │ │ page_size    │
+│ avatar_url   │ │ date_format  │
+└──────────────┘ └──────────────┘
+```
+
+### Route Protection
+
+```
+App.tsx
+├── /login          → Login page (public)
+├── /register       → Register page (public)
+└── ProtectedRoute  → checks useAuth().user
+    └── AppShell    → authenticated layout
+        ├── /               → Dashboard
+        ├── /patients       → Patient list
+        ├── /patients/new   → Patient creation
+        ├── /patients/:id   → Patient profile
+        ├── /patients/:id/prescribe → Prescription flow
+        ├── /profile        → User profile editor
+        └── /settings       → App preferences
+```
+
 ## Security Considerations
 
-- No authentication (explicitly out of scope)
+- Supabase Auth for authentication (email/password sign-in/sign-up)
+- Route protection via `ProtectedRoute` component (redirects to `/login` if unauthenticated)
+- `user_profiles` and `user_settings` tables should have RLS policies restricting access to own rows
 - No delete operations (healthcare data retention policy)
 - Google Places API key kept server-side via proxy
 - Mapbox token is publishable (client-side usage is fine)
@@ -447,6 +529,8 @@ This results in 7 queries instead of 10 (1 main + 6 selectinloads vs 1 main + 9 
 |----------|----------|---------|
 | `VITE_API_BASE_URL` | `client/.env.local` | Backend API URL |
 | `VITE_MAPBOX_TOKEN` | `client/.env.local` | Mapbox map display (client) |
+| `VITE_SUPABASE_URL` | `client/.env.local` | Supabase project URL (auth) |
+| `VITE_SUPABASE_ANON_KEY` | `client/.env.local` | Supabase anon/public key (auth) |
 | `DATABASE_URL` | `server/.env` | Supabase PostgreSQL connection |
 | `GOOGLE_PLACES_API_KEY` | `server/.env` | Pharmacy search (server-only) |
 | `MAPBOX_ACCESS_TOKEN` | `server/.env` | Address geocoding (server) |

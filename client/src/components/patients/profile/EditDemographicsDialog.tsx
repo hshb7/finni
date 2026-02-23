@@ -1,11 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
+import { CheckIcon } from 'lucide-react'
 import type { PatientDetail } from '@/lib/types'
 import { editDemographicsSchema } from '@/lib/schemas'
 import type { EditDemographicsValues } from '@/lib/schemas'
-import { SEX_OPTIONS, US_STATES } from '@/lib/constants'
+import { SEX_OPTIONS, US_STATES, AVATAR_OPTIONS } from '@/lib/constants'
+import { cn, getInitials } from '@/lib/utils'
 import { useEditDemographics } from '@/hooks/use-patients'
 import {
   Dialog,
@@ -22,7 +24,9 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -46,6 +50,8 @@ export function EditDemographicsDialog({
   patientId,
 }: EditDemographicsDialogProps) {
   const { mutate, isPending } = useEditDemographics()
+  const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined)
+  const selectedAvatar = pendingAvatar !== undefined ? pendingAvatar : (patient.avatar_url ?? null)
 
   const form = useForm<EditDemographicsValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,6 +74,7 @@ export function EditDemographicsDialog({
 
   useEffect(() => {
     if (open) {
+      setPendingAvatar(undefined)
       form.reset({
         first_name: patient.first_name,
         middle_name: patient.middle_name ?? '',
@@ -86,8 +93,9 @@ export function EditDemographicsDialog({
   }, [open, patient, form])
 
   function onSubmit(values: EditDemographicsValues) {
+    const data = { ...values, avatar_url: selectedAvatar ?? undefined }
     mutate(
-      { id: patientId, data: values },
+      { id: patientId, data },
       {
         onSuccess: () => {
           toast.success('Demographics updated successfully')
@@ -108,6 +116,34 @@ export function EditDemographicsDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+            <div className='space-y-2'>
+              <Label>Avatar</Label>
+              <div className='grid grid-cols-6 gap-2'>
+                {AVATAR_OPTIONS.map(url => (
+                  <button
+                    key={url}
+                    type='button'
+                    onClick={() => setPendingAvatar(url)}
+                    className={cn(
+                      'relative rounded-full transition-all',
+                      selectedAvatar === url
+                        ? 'ring-primary ring-2 ring-offset-2 ring-offset-background'
+                        : 'hover:ring-primary/50 hover:ring-2 hover:ring-offset-2 hover:ring-offset-background'
+                    )}
+                  >
+                    <Avatar className='size-full avatar-pfp'>
+                      <AvatarImage src={url} alt='Avatar option' />
+                      <AvatarFallback>{getInitials(`${patient.first_name} ${patient.last_name}`)}</AvatarFallback>
+                    </Avatar>
+                    {selectedAvatar === url && (
+                      <span className='bg-primary text-primary-foreground absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full'>
+                        <CheckIcon className='size-2.5' />
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className='grid grid-cols-2 gap-4'>
               <FormField
                 control={form.control}

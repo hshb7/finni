@@ -1,90 +1,76 @@
-import { useState, useEffect } from 'react'
-import type { ReactNode } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { ReactNode, MouseEvent } from 'react'
 
-import { MoonIcon, SunIcon } from 'lucide-react'
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
+import { applyTheme, getInitialTheme } from '@/lib/theme'
 
 type Props = {
   trigger: ReactNode
-  defaultOpen?: boolean
-  align?: 'start' | 'center' | 'end'
 }
 
-function getInitialTheme(): string {
-  if (typeof window === 'undefined') return 'system'
-  const stored = localStorage.getItem('theme')
-  if (stored) return stored
-  return 'system'
-}
-
-function applyTheme(theme: string) {
-  const root = document.documentElement
-  if (theme === 'dark') {
-    root.classList.add('dark')
-  } else if (theme === 'light') {
-    root.classList.remove('dark')
-  } else {
-    // system
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    if (prefersDark) {
-      root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
-    }
-  }
-}
-
-const ThemeToggle = ({ defaultOpen, align, trigger }: Props) => {
+const ThemeToggle = ({ trigger }: Props) => {
   const [theme, setTheme] = useState(getInitialTheme)
+  const { user } = useAuth()
+  const btnRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     applyTheme(theme)
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  useEffect(() => {
-    if (theme !== 'system') return
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = () => applyTheme('system')
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [theme])
+  const toggle = useCallback(
+    (e: MouseEvent) => {
+      const next = theme === 'dark' ? 'light' : 'dark'
+
+      const rect = btnRef.current?.getBoundingClientRect()
+      const x = rect ? rect.left + rect.width / 2 : e.clientX
+      const y = rect ? rect.top + rect.height / 2 : e.clientY
+
+      const endRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y),
+      )
+
+      // Use View Transitions API if supported
+      if (document.startViewTransition) {
+        const transition = document.startViewTransition(() => {
+          setTheme(next)
+        })
+        transition.ready.then(() => {
+          document.documentElement.animate(
+            {
+              clipPath: [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${endRadius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 700,
+              easing: 'ease-out',
+              pseudoElement: '::view-transition-new(root)',
+            },
+          )
+        })
+      } else {
+        setTheme(next)
+      }
+
+      if (user) {
+        supabase
+          .from('user_settings')
+          .update({ theme: next, updated_at: new Date().toISOString() })
+          .eq('auth_user_id', user.id)
+          .then()
+      }
+    },
+    [theme, user],
+  )
 
   return (
-    <DropdownMenu defaultOpen={defaultOpen}>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent className='w-40' align={align || 'end'}>
-        <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-          <DropdownMenuRadioItem
-            value='light'
-            className='data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground pl-2 text-base [&>span]:hidden'
-          >
-            <SunIcon className='mr-2 size-4' />
-            Light
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem
-            value='dark'
-            className='data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground pl-2 text-base [&>span]:hidden'
-          >
-            <MoonIcon className='mr-2 size-4' />
-            Dark
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem
-            value='system'
-            className='data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground pl-2 text-base [&>span]:hidden'
-          >
-            System
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div ref={btnRef} onClick={toggle}>
+      {trigger}
+    </div>
   )
 }
 

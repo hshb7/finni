@@ -53,6 +53,8 @@ class CreatePatientRequest(BaseModel):
     insurance: Optional[InsuranceInput] = None
     # Step 5 - Medical Info (optional)
     medical: Optional[MedicalInput] = None
+    # Avatar
+    avatar_url: Optional[str] = None
 
 
 # --- Demographics edit ---
@@ -69,6 +71,7 @@ class EditDemographicsRequest(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     zip_code: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 # --- Status edit ---
@@ -201,6 +204,7 @@ class PatientResponse(BaseModel):
     status: str
     referral_source: Optional[str] = None
     notes: Optional[str] = None
+    avatar_url: Optional[str] = None
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
@@ -360,6 +364,7 @@ class PatientListItem(BaseModel):
     city: str
     state: str
     phone: Optional[str] = None
+    avatar_url: Optional[str] = None
     created_at: datetime.datetime
 
 
