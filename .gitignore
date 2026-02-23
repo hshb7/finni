@@ -1,0 +1,30 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Environment files (secrets)
+.env
+*.local
+
+# Python
+__pycache__/
+*.pyc
+
+# Local config
+.claude/
+.mcp.json
+CLAUDE.md
+
+# Reference blocks (not part of app)
+application-shell-05/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.sw?

@@ -19,33 +19,50 @@ async def get_nearby_pharmacies(
     if not GOOGLE_PLACES_API_KEY:
         raise HTTPException(status_code=500, detail="Google Places API key not configured")
 
-    url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-    params = {
-        "location": f"{lat},{lng}",
-        "radius": radius,
-        "type": "pharmacy",
-        "key": GOOGLE_PLACES_API_KEY,
+    # Places API (New) — POST endpoint
+    url = "https://places.googleapis.com/v1/places:searchNearby"
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+        "X-Goog-FieldMask": (
+            "places.displayName,"
+            "places.formattedAddress,"
+            "places.location,"
+            "places.rating,"
+            "places.currentOpeningHours"
+        ),
+    }
+    body = {
+        "includedPrimaryTypes": ["pharmacy"],
+        "maxResultCount": 20,
+        "locationRestriction": {
+            "circle": {
+                "center": {"latitude": lat, "longitude": lng},
+                "radius": float(radius),
+            }
+        },
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params, timeout=10.0)
+        response = await client.post(url, json=body, headers=headers, timeout=10.0)
 
     if response.status_code != 200:
         raise HTTPException(status_code=502, detail="Google Places API request failed")
 
     data = response.json()
     results = []
-    for place in data.get("results", []):
-        geometry = place.get("geometry", {}).get("location", {})
-        opening_hours = place.get("opening_hours", {})
+    for place in data.get("places", []):
+        location = place.get("location", {})
+        opening_hours = place.get("currentOpeningHours", {})
+        display_name = place.get("displayName", {})
         results.append(
             PharmacyResult(
-                name=place.get("name", ""),
-                address=place.get("vicinity", ""),
-                lat=geometry.get("lat", 0),
-                lng=geometry.get("lng", 0),
+                name=display_name.get("text", ""),
+                address=place.get("formattedAddress", ""),
+                lat=location.get("latitude", 0),
+                lng=location.get("longitude", 0),
                 rating=place.get("rating"),
-                open_now=opening_hours.get("open_now"),
+                open_now=opening_hours.get("openNow"),
             )
         )
 

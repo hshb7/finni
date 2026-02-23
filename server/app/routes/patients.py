@@ -3,7 +3,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, col, func, select
 
 from app.database import get_session
@@ -103,10 +103,12 @@ def get_patient(id: UUID, session: Session = Depends(get_session)):
         select(Patient)
         .where(Patient.id == id)
         .options(
+            # 1:1 — JOIN into the main query (no extra round trips)
+            joinedload(Patient.insurance_info),
+            joinedload(Patient.medical_info),
+            joinedload(Patient.preferred_pharmacy),
+            # 1:many — separate SELECT IN queries
             selectinload(Patient.emergency_contacts),
-            selectinload(Patient.insurance_info),
-            selectinload(Patient.medical_info),
-            selectinload(Patient.preferred_pharmacy),
             selectinload(Patient.appointments),
             selectinload(Patient.visits),
             selectinload(Patient.immunizations),

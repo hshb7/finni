@@ -7,15 +7,15 @@
 | Layer | Status | Progress |
 |-------|--------|----------|
 | Frontend Shell & Theme | Done | 100% |
-| Frontend Pages | Placeholder stubs | 5% |
-| Frontend Components (patients, dashboard) | Not started | 0% |
-| Frontend Hooks & API Client | Not started | 0% |
+| Frontend Pages | Done | 100% |
+| Frontend Components (patients, dashboard) | Done | 100% |
+| Frontend Hooks & API Client | Done | 100% |
 | Backend API | Done | 100% |
 | Database Schema | Done | 100% |
 | Seed Data | Done | 100% |
 | External API Integration | Done (pharmacy proxy) | 100% |
 
-**Estimated overall: ~40%** — Backend is complete. Frontend feature work remains.
+**Estimated overall: ~100%** — All pages, components, and backend endpoints are complete. Notifications and activity feed are wired to live data. All cosmetic components are data-driven.
 
 ---
 
@@ -38,12 +38,12 @@
 ### Application Shell (Complete)
 - [x] `AppShell.tsx` — floating sidebar + primary-color header + content outlet
 - [x] Sidebar navigation: Dashboard, Patients (with `NavLink` active states)
-- [x] Recent Patients section in sidebar (hardcoded placeholder data)
+- [x] Recent Patients section in sidebar (live data from `usePatients` hook)
 - [x] "Finni Health" branding with custom SVG logo
 - [x] `MenuTrigger.tsx` — sidebar toggle (expand/collapse/mobile)
-- [x] `SearchDialog.tsx` — command palette search (mock data)
-- [x] `ActivityDialog.tsx` — right-side activity feed sheet (mock data)
-- [x] `NotificationDropdown.tsx` — tabbed notifications dropdown (mock data)
+- [x] `SearchDialog.tsx` — command palette search (live API search with debounce)
+- [x] `ActivityDialog.tsx` — right-side activity feed sheet (live data from `useRecentActivity` hook)
+- [x] `NotificationDropdown.tsx` — tabbed notifications dropdown (live data: Inbox = upcoming appointments, General = care gaps)
 - [x] `ProfileDropdown.tsx` — user profile dropdown menu
 - [x] `SidebarUserDropdown.tsx` — sidebar footer user menu
 
@@ -53,10 +53,12 @@
 - [x] Flash prevention script in `index.html`
 - [x] Persists to `localStorage` key `theme`
 
-### UI Components (15 installed)
-- [x] avatar, badge, button, card, collapsible
-- [x] command, dialog, dropdown-menu, input, separator
-- [x] sheet, sidebar, skeleton, tabs, tooltip
+### UI Components (26 installed)
+- [x] avatar, badge, button, calendar, card, chart
+- [x] collapsible, command, dialog, dropdown-menu, form
+- [x] input, label, pagination, popover, progress
+- [x] select, separator, sheet, sidebar, skeleton
+- [x] sonner, table, tabs, textarea, tooltip
 
 ### Routing (Complete)
 - [x] React Router v7 with `BrowserRouter`
@@ -67,25 +69,37 @@
 - [x] `client/.env.local` — `VITE_API_BASE_URL`, `VITE_MAPBOX_TOKEN`
 - [x] `server/.env` — `DATABASE_URL`, `GOOGLE_PLACES_API_KEY`, `MAPBOX_ACCESS_TOKEN`
 
----
+### Frontend API Client & Hooks (Complete — Phase 4)
 
-## What's Not Started
+- [x] `lib/constants.ts` — All enum values as `as const` arrays matching database CHECK constraints (statuses, sex, relationships, appointment types, visit types, medication forms, sort columns, US states)
+- [x] `lib/types.ts` — TypeScript interfaces mirroring all 17 backend Pydantic response schemas + 14 request body interfaces + param types
+- [x] `lib/schemas.ts` — Zod v4 validation schemas for all forms (basic info, contact/address, emergency contacts, insurance, medical, demographics edit, status edit, appointments, visits, immunizations, prescriptions, pharmacy)
+- [x] `lib/api.ts` — Fetch wrapper with `ApiError` class + 24 typed endpoint functions matching all backend routes
+- [x] `lib/query-keys.ts` — Centralized TanStack Query key factory (patients, appointments, visits, immunizations, prescriptions, medications, pharmacies, stats)
+- [x] `hooks/use-patients.ts` — 9 hooks (usePatients with keepPreviousData + staleTime 30s, usePatient with staleTime 30s, useCreatePatient, useEditDemographics, useEditStatus, useEditContacts, useEditInsurance, useEditMedical, useEditPharmacy) with cache invalidation
+- [x] `hooks/use-appointments.ts` — 3 hooks (useAppointments, useCreateAppointment, useEditAppointment)
+- [x] `hooks/use-visits.ts` — 3 hooks (useVisits, useCreateVisit, useEditVisit)
+- [x] `hooks/use-immunizations.ts` — 3 hooks (useImmunizations, useCreateImmunization, useEditImmunization)
+- [x] `hooks/use-prescriptions.ts` — 3 hooks (useMedications with staleTime: Infinity, usePrescriptions, useCreatePrescription)
+- [x] `hooks/use-pharmacies.ts` — 1 hook (useNearbyPharmacies with enabled guard and 5min staleTime)
+- [x] `hooks/use-stats.ts` — 7 hooks (useStatsOverview, useStatsTrends, useRecentAppointments, useCareGaps, useNewPatientsTrend, useTopMedications, useRecentActivity)
+- [x] `main.tsx` — QueryClientProvider wrapping App (staleTime: 2min, retry: 1, refetchOnWindowFocus: false)
 
 ### Backend API (Complete — 24 endpoints + health + seed)
 
-- [x] `server/requirements.txt` — Python dependencies
+- [x] `server/requirements.txt` — Python dependencies (FastAPI, SQLModel, httpx, pydantic, psycopg2, uvicorn, python-dotenv)
 - [x] `server/app/main.py` — FastAPI app, CORS, route registration, seed endpoint
-- [x] `server/app/database.py` — Supabase/SQLModel engine + NullPool session
+- [x] `server/app/database.py` — Supabase/SQLModel engine + QueuePool (transaction pooler port 6543, pool_size=5)
 - [x] `server/app/models.py` — 11 SQLModel table definitions with relationships
-- [x] `server/app/schemas.py` — Pydantic request/response DTOs
-- [x] `server/app/seed.py` — Demo data generator (~50 patients with full related data)
-- [x] `server/app/routes/patients.py` — 9 endpoints (paginated list, detail, create, edit demographics/status/contacts/insurance/medical/pharmacy)
+- [x] `server/app/schemas.py` — All Pydantic request/response DTOs
+- [x] `server/app/seed.py` — Demo data generator (~50 patients with full related data spanning 6 months)
+- [x] `server/app/routes/patients.py` — 9 endpoints (paginated list with filter/search/sort, detail with joinedload for 1:1 + selectinload for 1:many, create with auto status history, edit demographics/status/contacts/insurance/medical/pharmacy)
 - [x] `server/app/routes/appointments.py` — 3 endpoints (list, create, edit)
 - [x] `server/app/routes/visits.py` — 3 endpoints (list, create, edit)
 - [x] `server/app/routes/immunizations.py` — 3 endpoints (list, create, edit)
 - [x] `server/app/routes/prescriptions.py` — 3 endpoints (medications list, prescriptions list, create with preferred pharmacy upsert)
-- [x] `server/app/routes/pharmacies.py` — Google Places nearby search proxy
-- [x] `server/app/routes/stats.py` — Dashboard overview + monthly trends
+- [x] `server/app/routes/pharmacies.py` — Google Places nearby search proxy (async httpx)
+- [x] `server/app/routes/stats.py` — Dashboard overview + trends + recent appointments + care gaps + new patients trend + top medications + recent activity (7 endpoints)
 
 ### Database Schema (Complete — 11 tables + 10 seeded medications)
 
@@ -101,140 +115,85 @@
 - [x] `medications` — lookup table (10 preloaded entries)
 - [x] `status_history` — 1:many chronological status change log
 
-### Frontend Pages (Stubs Only)
+### Seed Data (Complete — 50 patients seeded)
 
-All 4 pages exist as files but contain only placeholder text:
+- [x] 50 demo patients with realistic names, addresses across 16 US cities
+- [x] Status distribution weighted: ~50% Active, ~20% Onboarding, ~15% Inquiry, ~15% Churned
+- [x] Each patient has: 1-2 emergency contacts, insurance (80%), medical info (70%), preferred pharmacy (60%)
+- [x] 0-4 appointments, 0-3 visits, 0-3 immunizations, 0-2 prescriptions per patient
+- [x] Full status history chains matching current status (Inquiry -> Onboarding -> Active -> Churned)
+- [x] All data spans 6 months of history for realistic trend charts
 
-- [ ] `Dashboard.tsx` — needs stats cards, charts (Recharts), patient table
-- [ ] `PatientCreate.tsx` — needs 6-step multi-step form workflow
-- [ ] `PatientProfile.tsx` — needs 10 profile sections with edit modals
-- [ ] `PrescriptionFlow.tsx` — needs 3-step flow (medication, pharmacy map, confirm)
+### Frontend Pages (Complete)
 
-### Frontend Feature Components (0%)
+- [x] `Dashboard.tsx` — stats cards, charts (Recharts), patient table, calendar, care gaps, top medications
+- [x] `PatientCreate.tsx` — 6-step multi-step form with progress bar, skip logic, slide animations, review step
+- [x] `PatientProfile.tsx` — 4 tabs (Overview, Appointments, Clinical, Prescriptions & Status), 9 edit/create dialogs
+- [x] `PrescriptionFlow.tsx` — 3-step flow (medication autocomplete, pharmacy map with Mapbox + Google Places, confirmation)
 
-None of these files exist yet:
+### Frontend Feature Components (Complete)
 
 **Dashboard:**
-- [ ] Stats cards (4 status summary cards)
-- [ ] Pie/donut chart (patient status distribution)
-- [ ] Bar chart (patient counts by status)
-- [ ] Line/area chart (status trends over time)
+- [x] Stats cards (5 status summary cards including total)
+- [x] Calendar with appointment dots
+- [x] Care gaps list
+- [x] New patients trend chart (with empty state)
+- [x] Top medications bar chart
+- [x] Status trends area chart (with empty state)
+- [x] Patient table with server-side pagination, filtering, sorting, search
 
-**Patient Table:**
-- [ ] `PatientTable.tsx` — server-side paginated, filterable, searchable, sortable
-- [ ] `StatusBadge.tsx` — color-coded status badges
+**Patient Creation (7 components):**
+- [x] `StepIndicator.tsx` — progress bar + numbered circles with completed/current/skipped/upcoming states
+- [x] `Step1BasicInfo.tsx` — name, DOB, sex, language
+- [x] `Step2ContactAddress.tsx` — phone, email, address
+- [x] `Step3EmergencyContacts.tsx` — useFieldArray, optional with skip
+- [x] `Step4Insurance.tsx` — optional with skip
+- [x] `Step5Medical.tsx` — optional with skip
+- [x] `Step6Review.tsx` — read-only summary with edit-step callbacks
+- [x] Slide animation on step transitions (CSS keyframes, direction-aware)
 
-**Patient Creation (6 steps):**
-- [ ] `BasicInfoStep.tsx` — name, DOB, sex, language
-- [ ] `ContactStep.tsx` — phone, email, address
-- [ ] `EmergencyContactsStep.tsx` — optional, with skip
-- [ ] `InsuranceStep.tsx` — optional, with skip
-- [ ] `MedicalStep.tsx` — optional, with skip
-- [ ] `ReviewStep.tsx` — summary + create button
-
-**Patient Profile (10 sections):**
-- [ ] `DemographicsSection.tsx`
-- [ ] `ContactsSection.tsx`
-- [ ] `InsuranceSection.tsx`
-- [ ] `MedicalSection.tsx`
-- [ ] `PharmacySection.tsx`
-- [ ] `AppointmentsSection.tsx`
-- [ ] `VisitsSection.tsx`
-- [ ] `ImmunizationsSection.tsx`
-- [ ] `PrescriptionsSection.tsx`
-- [ ] `StatusSection.tsx` + `StatusTimeline.tsx`
-
-**Edit Forms (8 modals):**
-- [ ] `DemographicsForm.tsx`
-- [ ] `ContactsForm.tsx`
-- [ ] `InsuranceForm.tsx`
-- [ ] `MedicalForm.tsx`
-- [ ] `PharmacyForm.tsx`
-- [ ] `AppointmentForm.tsx`
-- [ ] `VisitForm.tsx`
-- [ ] `ImmunizationForm.tsx`
+**Patient Profile (22 components):**
+- [x] 4 tabs: Overview, Appointments, Clinical, Prescriptions & Status
+- [x] 9 edit/create dialogs with react-hook-form + zod validation
+- [x] Loading skeleton + 404 error state
 
 **Prescription Flow (5 components):**
-- [ ] `MedicationStep.tsx` — search/autocomplete
-- [ ] `PharmacyStep.tsx` — split-view layout
-- [ ] `PharmacyMap.tsx` — Mapbox map with pins
-- [ ] `PharmacyList.tsx` — scrollable pharmacy list
-- [ ] `ConfirmationStep.tsx` — summary + save
+- [x] `MedicationStep.tsx` — search/autocomplete from medications list
+- [x] `PharmacyStep.tsx` — split-view layout with map + list
+- [x] `PharmacyMap.tsx` — Mapbox map with pharmacy pins
+- [x] `PharmacyList.tsx` — scrollable pharmacy list from Google Places
+- [x] `ConfirmationStep.tsx` — summary + save
 
-### Frontend Infrastructure (0%)
+### Phase 9: Polish (Complete)
+- [x] Search dialog wired to live patient API (debounced search, recent patients, navigation)
+- [x] Empty states for TrendsAreaChart and NewPatientsTrend
+- [x] Responsive layout (sidebar collapse, table scroll, map stacking)
+- [x] Loading skeleton loaders on all pages
 
-- [ ] `lib/api.ts` — fetch wrapper / API client
-- [ ] `lib/schemas.ts` — Zod validation schemas
-- [ ] `lib/constants.ts` — US states, status values, etc.
-- [ ] `hooks/usePatients.ts` — TanStack Query hooks for patients
-- [ ] `hooks/useStats.ts` — TanStack Query hooks for dashboard stats
-- [ ] Additional TanStack Query hooks per resource
-
-### Missing shadcn/ui Components
-
-Components that will be needed but aren't installed yet:
-
-- [ ] `table` — for PatientTable
-- [ ] `select` — for dropdowns (status filter, state picker)
-- [ ] `form` + `label` — for React Hook Form integration
-- [ ] `textarea` — for notes fields
-- [ ] `popover` + `calendar` — for date pickers
-- [ ] `toast` / `sonner` — for API error/success notifications
-- [ ] `chart` — for Recharts integration
-- [ ] `pagination` — for patient table
-- [ ] `progress` — for multi-step form progress indicator
+### Phase 10: Live Notifications & Activity Feed (Complete)
+- [x] `GET /getRecentActivity` — UNION ALL aggregation across 5 tables (appointments, visits, prescriptions, status_history, patients), top 20 by timestamp
+- [x] `NotificationDropdown` — Inbox tab shows upcoming appointments, General tab shows care gaps, dynamic count badge, loading/empty states, clickable navigation
+- [x] `ActivityDialog` — live activity feed with event-type icons, relative timestamps, color-coded status dots, loading/empty states
+- [x] `AppShell` — conditional red dot on bell icon (only shows when upcoming appointments or care gaps exist)
+- [x] `formatRelativeTime` helper added to `lib/format.ts`
 
 ---
 
-## Suggested Build Order
+## Remaining (Out of Scope)
 
-### Phase 1: Backend Foundation
-1. Create `requirements.txt` and install dependencies
-2. Set up `database.py` (Supabase connection via SQLModel)
-3. Define all 13 table models in `models.py`
-4. Create database tables (via Supabase migration or SQLModel create_all)
-5. Build `schemas.py` with Pydantic DTOs
-6. Implement `main.py` with CORS and route registration
+- Authentication — out of scope per spec
 
-### Phase 2: Core API Endpoints
-7. `routes/patients.py` — CRUD + section edits (9 endpoints)
-8. `routes/stats.py` — dashboard aggregations (2 endpoints)
-9. `routes/appointments.py` (3 endpoints)
-10. `routes/visits.py` (3 endpoints)
-11. `routes/immunizations.py` (3 endpoints)
-12. `routes/prescriptions.py` (3 endpoints)
-13. `routes/pharmacies.py` — Google Places proxy (1 endpoint)
+---
 
-### Phase 3: Seed Data
-14. Build `seed.py` — generate ~50 patients with full related data
-15. Run seeder to populate development database
+## Build Order (Complete)
 
-### Phase 4: Frontend — API Client & Hooks
-16. Build `lib/api.ts`, `lib/schemas.ts`, `lib/constants.ts`
-17. Build TanStack Query hooks for all resources
-18. Install remaining shadcn/ui components
-
-### Phase 5: Frontend — Dashboard
-19. Stats cards + charts (Recharts)
-20. Patient table with server-side pagination, filtering, sorting, search
-
-### Phase 6: Frontend — Patient Profile
-21. Build 10 profile section components
-22. Build 8 modal edit forms
-23. Wire up to API via TanStack Query mutations
-
-### Phase 7: Frontend — Patient Creation
-24. Build 6-step multi-step form with React Hook Form + Zod
-25. Progress indicator, skip messaging, review step
-
-### Phase 8: Frontend — Prescription Flow
-26. Medication autocomplete step
-27. Pharmacy search with Mapbox map + Google Places list
-28. Confirmation and save step
-
-### Phase 9: Polish
-29. Loading states (skeleton loaders)
-30. Error handling (toast notifications)
-31. Empty states
-32. Responsive design (mobile sidebar, table scroll)
-33. Wire shell components to real data (search, recent patients, notifications)
+### ~~Phase 1: Backend Foundation~~ (DONE)
+### ~~Phase 2: Core API Endpoints~~ (DONE — 24 endpoints implemented)
+### ~~Phase 3: Seed Data~~ (DONE — 50 patients seeded)
+### ~~Phase 4: Frontend — API Client & Hooks~~ (DONE)
+### ~~Phase 5: Frontend — Dashboard~~ (DONE)
+### ~~Phase 6: Frontend — Patient Profile~~ (DONE)
+### ~~Phase 7: Frontend — Patient Creation~~ (DONE)
+### ~~Phase 8: Frontend — Prescription Flow~~ (DONE)
+### ~~Phase 9: Polish~~ (DONE)
+### ~~Phase 10: Live Notifications & Activity Feed~~ (DONE)

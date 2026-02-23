@@ -256,12 +256,16 @@ def seed_database():
 
             # Appointments (0-4 per patient)
             for _ in range(random.randint(0, 4)):
-                apt_status = random.choice(["Scheduled", "Completed", "Cancelled", "No-Show"])
+                apt_dt = _random_datetime(six_months_ago, today + datetime.timedelta(days=30))
+                if apt_dt.date() >= today:
+                    apt_status = "Scheduled"
+                else:
+                    apt_status = random.choice(["Completed", "Cancelled", "No-Show"])
                 session.add(Appointment(
                     patient_id=patient.id,
                     provider_name=random.choice(PROVIDERS),
                     appointment_type=random.choice(APPOINTMENT_TYPES),
-                    date_time=_random_datetime(six_months_ago, today + datetime.timedelta(days=30)),
+                    date_time=apt_dt,
                     duration_minutes=random.choice([15, 30, 45, 60]),
                     location=random.choice(["Main Office", "Telehealth", "Branch Office"]),
                     notes=random.choice([None, "Please bring insurance card", "Follow-up needed"]),
