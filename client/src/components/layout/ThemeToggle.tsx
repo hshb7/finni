@@ -46,7 +46,7 @@ const ThemeToggle = ({ trigger }: Props) => {
               ],
             },
             {
-              duration: 700,
+              duration: 400,
               easing: 'ease-out',
               pseudoElement: '::view-transition-new(root)',
             },
