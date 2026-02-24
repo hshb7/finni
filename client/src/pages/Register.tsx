@@ -46,9 +46,9 @@ const Register = () => {
     <div className='bg-muted flex min-h-dvh items-center justify-center p-4'>
       <Card className='w-full max-w-sm'>
         <CardHeader className='items-center text-center'>
-          <LogoSvg className='size-12 mb-2' />
+          <LogoSvg className='text-foreground size-12 mb-2' />
           <CardTitle className='text-2xl'>Create Account</CardTitle>
-          <CardDescription>Register for Finni Health</CardDescription>
+          <CardDescription>Register for Hshb Health</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>

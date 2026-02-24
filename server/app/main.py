@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Finni Health API",
+    title="Hshb Health API",
     description="Patient Management Dashboard API",
     version="0.1.0",
     lifespan=lifespan,

@@ -44,8 +44,8 @@ const Login = () => {
     <div className='bg-muted flex min-h-dvh items-center justify-center p-4'>
       <Card className='w-full max-w-sm'>
         <CardHeader className='items-center text-center'>
-          <LogoSvg className='size-12 mb-2' />
-          <CardTitle className='text-2xl'>Finni Health</CardTitle>
+          <LogoSvg className='text-foreground size-12 mb-2' />
+          <CardTitle className='text-2xl'>Hshb Health</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>

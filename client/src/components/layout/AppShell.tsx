@@ -84,7 +84,7 @@ const AppShell = () => {
                 <SidebarMenuButton size='lg' className='gap-2.5 !bg-transparent [&>svg]:size-8' asChild>
                   <NavLink to='/'>
                     <LogoSvg className='[&_rect]:fill-sidebar [&_rect:first-child]:fill-primary' />
-                    <span className='text-xl font-semibold'>Finni Health</span>
+                    <span className='text-xl font-semibold'>Hshb Health</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
