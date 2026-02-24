@@ -38,12 +38,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS – allow local dev origins plus optional production frontend URL(s)
-_origins = ["http://localhost:5173", "http://localhost:3000"]
+# CORS – allow local dev and production origins
+_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://finni-three.vercel.app",
+]
 _frontend_url = os.getenv("FRONTEND_URL", "")
 for url in _frontend_url.split(","):
     url = url.strip()
-    if url:
+    if url and url not in _origins:
         _origins.append(url)
 
 app.add_middleware(
