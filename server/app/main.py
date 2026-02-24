@@ -38,11 +38,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS – allow local dev origins plus an optional production frontend URL
+# CORS – allow local dev origins plus optional production frontend URL(s)
 _origins = ["http://localhost:5173", "http://localhost:3000"]
-_frontend_url = os.getenv("FRONTEND_URL")
-if _frontend_url:
-    _origins.append(_frontend_url)
+_frontend_url = os.getenv("FRONTEND_URL", "")
+for url in _frontend_url.split(","):
+    url = url.strip()
+    if url:
+        _origins.append(url)
 
 app.add_middleware(
     CORSMiddleware,
