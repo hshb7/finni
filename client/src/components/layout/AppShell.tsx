@@ -145,7 +145,7 @@ const AppShell = () => {
                 />
                 <div className='hidden sm:flex sm:flex-col sm:items-start'>
                   <p className='text-lg font-semibold'>Welcome back{firstName ? `, ${firstName}` : ''}</p>
-                  <p className='text-muted-foreground md:max-lg:hidden'>Patient Management Dashboard</p>
+                  <p className='text-muted-foreground md:max-lg:hidden'>Dashboard</p>
                 </div>
               </div>
               <SearchDialog
