@@ -8,13 +8,15 @@ load_dotenv()
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
-# QueuePool: reuses connections across requests.
-# Supabase transaction pooler (port 6543) handles server-side multiplexing.
+# Tuned for serverless (Vercel): small pool since each function instance
+# is short-lived. Supabase transaction pooler (port 6543) handles
+# server-side multiplexing.
 engine = create_engine(
     DATABASE_URL,
-    pool_size=5,
-    max_overflow=10,
+    pool_size=1,
+    max_overflow=2,
     pool_pre_ping=True,
+    pool_recycle=300,
 )
 
 
